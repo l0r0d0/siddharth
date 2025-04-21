@@ -10,7 +10,7 @@ Thank you for considering contributing to Siddharth! This document outlines the 
    - Clone your fork:
 
      ```bash
-     git clone https://github.com/yourusername/siddharth.git
+     git clone https://github.com/l0r0d0/siddharth.git
      ```
 
 2. **Create a Branch**:
@@ -74,6 +74,6 @@ Thank you for considering contributing to Siddharth! This document outlines the 
 
 ## Questions?
 
-If you have questions, open an issue or contact \[your.email@example.com\].
+If you have questions, open an issue or contact \sag090302@gmail.com.
 
 Thank you for helping improve Siddharth!
