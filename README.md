@@ -115,7 +115,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ## Contact
 
-For issues, suggestions, or questions, open an issue on the GitHub repository or contact \[your.email@example.com\].
+For issues, suggestions, or questions, open an issue on the GitHub repository or contact \sag090302@gmail.com.
 
 ## Disclaimer
 
