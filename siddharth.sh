@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# siddharth.sh - A tool to recursively scan a website using gobuster with colorized output and clean results
-# inspired by gobuster
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
@@ -11,6 +8,11 @@ NC='\033[0m'
 
 if ! command -v gobuster &> /dev/null; then
     echo -e "${RED}Error: gobuster is not installed. Please install it first.${NC}"
+    exit 1
+fi
+
+if ! command -v curl &> /dev/null; then
+    echo -e "${RED}Error: curl is not installed. Please install it first.${NC}"
     exit 1
 fi
 
@@ -43,7 +45,6 @@ run_gobuster() {
         -w "$WORDLIST" \
         -s "200,301,302,303,400,401,403" \
         -b "" \
-        --exclude-length 3201 \
         -q \
         $GOBUSTER_OPTIONS | \
     sed 's/\x1B\[[0-9;]*[JKmsu]//g' | \
@@ -60,8 +61,18 @@ run_gobuster() {
     fi
 }
 
-while [ -s "$QUEUE_FILE" ]; do
+fetch_headers() {
+    local url="$1"
+    local path="$2"
+    local full_url="$url/$path"
+    echo -e "${CYAN}[*] Fetching headers for: $full_url${NC}"
+    curl -I "$full_url" 2>/dev/null | head -n 10 | while read -r line; do
+        echo -e "${YELLOW}$line${NC}"
+    done
+    echo ""
+}
 
+while [ -s "$QUEUE_FILE" ]; do
     CURRENT_URL=$(tail -n 1 "$QUEUE_FILE")
     
     if grep -Fx "$CURRENT_URL" "$SCANNED_FILE" > /dev/null; then
@@ -77,6 +88,7 @@ while [ -s "$QUEUE_FILE" ]; do
         echo -e "${GREEN}----\t\t------${NC}"
         while IFS=$'\t' read -r path status; do
             printf "${GREEN}%-20s\t%s${NC}\n" "$path" "$status"
+            fetch_headers "$CURRENT_URL" "$path" >> "$ALL_RESULTS_FILE"
         done < "$TEMP_FILE"
         echo ""
     fi
@@ -84,7 +96,6 @@ while [ -s "$QUEUE_FILE" ]; do
     echo "$CURRENT_URL" >> "$SCANNED_FILE"
 
     while IFS=$'\t' read -r path status; do
-
         [ -z "$path" ] && continue
         
         FULL_URL="$CURRENT_URL/$path"
@@ -111,15 +122,18 @@ done
 if [ -s "$ALL_RESULTS_FILE" ]; then
     echo -e "${CYAN}[*] Final Summary of All Findings:${NC}"
     current_url=""
-    while IFS=$'\t' read -r line; do
+    while IFS= read -r line; do
         if [[ "$line" == "Results for"* ]]; then
-            current_url="$line"
-            echo -e "${CYAN}$current_url${NC}"
+            current_url="${line#Results for }"
+            current_url="${current_url%:}"
+            echo -e "${GREEN}Results for ${current_url}:${NC}"
             echo -e "${GREEN}Path\t\tStatus${NC}"
             echo -e "${GREEN}----\t\t------${NC}"
-        elif [ -n "$line" ]; then
+        elif [[ "$line" == $'\t'* ]]; then
             IFS=$'\t' read -r path status <<< "$line"
             printf "${GREEN}%-20s\t%s${NC}\n" "$path" "$status"
+        elif [ -n "$line" ]; then
+            echo -e "${YELLOW}$line${NC}"
         else
             echo ""
         fi
